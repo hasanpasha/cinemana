@@ -7,6 +7,11 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import * 
 from PyQt5.uic import loadUiType
 
+
+# FOR YOUTUBE TRAILERS
+from PyQt5.QtWebEngineWidgets import QWebEngineView
+
+
 from os import path
 import subprocess
 
@@ -21,9 +26,10 @@ from urllib.parse import urlencode
 
 MAIN_CLASS, _ = loadUiType(path.join(path.dirname(__file__), 'ui/main-test.ui'))
 
+
+
 # View Properties
 ICON_SIZE = 250
-
 
 class CinemanaAPI:
     SEARCH_API = 'https://cinemana.shabakaty.com/api/android/AdvancedSearch?'
@@ -32,14 +38,27 @@ class CinemanaAPI:
     ALL_INFO = 'https://cinemana.shabakaty.com/api/android/allVideoInfo/id/'
 
 
-class QRightClickMenu(QMenu):
-    def show(self, position):
-        add_to_favourite = QAction("Add to favourite", self, checkable=True)
-        add_to_watch_later = QAction("Add to Watch Later", self, checkable=True)
-        self.addAction(add_to_favourite)
-        self.addSeparator()
-        self.addAction(add_to_watch_later)
-        self.exec(position)
+def getYouTubeHtml(url):
+    url = url.replace("watch?v=", "embed/")
+    return "<style type=\"text/css\">*{margin: 0px;padding: 0px;};</style>" + '''
+        <iframe width="100%" height="100%" src="{}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    '''.format(url)
+
+
+####################### Right Click Menu #############################
+
+# DATA = (path.join(path.dirname(__file__), 'data/data.json'
+
+# class QRightClickMenu(QMenu):
+#     def show(self, position):
+#         add_to_favourite = QAction("Add to favourite", self, checkable=True)
+#         add_to_watch_later = QAction("Add to Watch Later", self, checkable=True)
+#         self.addAction(add_to_favourite)
+#         self.addSeparator()
+#         self.addAction(add_to_watch_later)
+#         self.exec(position)
+
+####################### Right Click Menu #############################
 
 
 class MainApp(QMainWindow, MAIN_CLASS):
@@ -58,14 +77,7 @@ class MainApp(QMainWindow, MAIN_CLASS):
 
         self.e = ''
 
-        # self.listWidget.setViewMode(QListView.IconMode)
         self.listWidget.setIconSize(ICON_SIZE * QSize(2, 2))
-        # self.listWidget.setMovement(QListView.Static)
-        # self.listWidget.setResizeMode(QListView.Adjust)
-        # self.listWidget.setMouseTracking(True)
-        # self.listWidget.setFlow(QListView.LeftToRight)
-        # self.listWidget.setWordWrap(True)
-        # self.listWidget.setTextElideMode(Qt.ElideMiddle)
 
         self.listWidget.itemClicked.connect(self.viewItem)
         # self.listWidget.itemDoubleClicked.connect(self.viewItem)
@@ -77,25 +89,28 @@ class MainApp(QMainWindow, MAIN_CLASS):
     #####################################
     #        RIGHT CLICK MENU           #
     #####################################
+    #<<<<<<<<<<<<<<<<<<<< ADD THIS FEATURE LATER  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    #     # self.listWidget.setEditTriggers(QAbstractItemView.NoEditTriggers)
+    #     self.listWidget.setContextMenuPolicy(Qt.CustomContextMenu)
+    #     self.listWidget.customContextMenuRequested.connect(self.myListWidgetContext)
 
-        # self.listWidget.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.listWidget.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.listWidget.customContextMenuRequested.connect(self.myListWidgetContext)
+    # def myListWidgetContext(self,position):
 
-    def myListWidgetContext(self,position):
-
-        #Popup menu
-        # print("RIGHT CLICKED")
+    #     #Popup menu
+    #     # print("RIGHT CLICKED")
         
-        if self.listWidget.itemAt(position):
-            # Get Current Item Position
-            point = QPoint()
-            point = self.listWidget.mapToGlobal(position)
+    #     if self.listWidget.itemAt(position):
+    #         # Get Current Item Position
+    #         point = QPoint()
+    #         point = self.listWidget.mapToGlobal(position)
 
-            # Show The Menu 
-            right_click_menu = QRightClickMenu()
-            right_click_menu.show(point)
+    #         # Show The Menu 
+    #         right_click_menu = QRightClickMenu()
+    #         right_click_menu.show(point)
 
+
+    # def addToPlayList(self, playlist='favourite'):
+    #     pass
 
     #####################################
     #        RIGHT CLICK MENU           #
@@ -154,15 +169,7 @@ class MainApp(QMainWindow, MAIN_CLASS):
                     # playLineArgs.append(subtile)
                     break
 
-                # else:
-                #     for i in self.subtiles:
-                #         if self.comboBox_5.currentText() == i['name']:
-                #             subtitle = i['file'].replace("\\", '')
-                #             playLineArgs.append(f'--sub-file={subtitle}')
-                #             # playLineArgs.append(subtile)
-                #             break
-        
-        # if len(play)
+                
         if self.comboBox_7.currentText() != 'Subtitle':
             for i in self.subtiles:
                 if self.comboBox_7.currentText() == i['name']:
@@ -315,10 +322,36 @@ class MainApp(QMainWindow, MAIN_CLASS):
             # Stars
             self.label_17.setText(series_json_info['stars'])
 
+            # info url (imdbUrlRef)
+            if info_link := series_json_info['imdbUrlRef']:
+                urlLink =f"<a href=\"{info_link}\">{info_link}</a>"
+
+                self.label_22.setText(urlLink)
+                self.label_22.setOpenExternalLinks(True)
+
+            else:
+                print("NO INFO FOUND")
+                self.label_21.hide()
+                self.label_22.hide()
+
             # Story:
             self.label_18.setText(series_json_info['en_content'])
             self.label_18.setWordWrap(True)
 
+
+            # Trailer (trailer)
+            if video_link := series_json_info['trailer']:
+                if html := getYouTubeHtml(video_link):
+                    print(html)
+                    self.webEngineView.setHtml(html)
+                    self.webEngineView.setFixedSize(QSize(450, 250))
+                    # self.webEngineView.setBackground(QColor(0, 0, 0))
+
+            else:
+                print("NO TRAILER FOUND")
+                self.webEngineView.hide()
+                self.label_19.hide()
+            
             if resp := self.getEpisodes(id):
                 series_episodes = json.loads(resp)
 
@@ -384,9 +417,34 @@ class MainApp(QMainWindow, MAIN_CLASS):
                 # Stars
                 self.label_8.setText(movie_json_info['stars'])
 
+                # info url (imdbUrlRef)
+                if info_link := movie_json_info['imdbUrlRef']:
+                    urlLink =f"<a href=\"{info_link}\">{info_link}</a>"
+
+                    self.label_24.setText(urlLink)
+                    self.label_24.setOpenExternalLinks(True)
+
+                else:
+                    print("NO INFO FOUND")
+                    self.label_23.hide()
+                    self.label_24.hide()
+
+
                 # Story:
                 self.label_9.setText(movie_json_info['en_content'])
                 self.label_9.setWordWrap(True)
+
+                # Trailer (trailer)
+                if video_link := movie_json_info['trailer']:
+                    if html := getYouTubeHtml(video_link):
+                        print(html)
+                        self.webEngineView_2.setHtml(html)
+                        self.webEngineView_2.setFixedSize(QSize(500, 300))
+
+                else:
+                    print("NO TRAILER FOUND")
+                    self.webEngineView_2.hide()
+                    self.label_20.hide()
 
                 # Add subtitles
                 try:
