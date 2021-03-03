@@ -24,7 +24,7 @@ import json
 from functools import lru_cache
 from urllib.parse import urlencode
 
-MAIN_CLASS, _ = loadUiType(path.join(path.dirname(__file__), 'ui/main-test.ui'))
+MAIN_CLASS, _ = loadUiType(path.join(path.dirname(__file__), 'ui/main_gui.ui'))
 
 
 
