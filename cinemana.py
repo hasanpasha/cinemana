@@ -74,6 +74,7 @@ class MainApp(QMainWindow, MAIN_CLASS):
         self.handleTabs(hide='1 2')
         self.handleSearchCombo()
         self.handleSeriesCombo()
+        self.handleStatusbar()
 
         self.e = ''
 
@@ -116,6 +117,12 @@ class MainApp(QMainWindow, MAIN_CLASS):
     #        RIGHT CLICK MENU           #
     #          CODE END HERE            #
     #####################################        
+
+    def handleStatusbar(self):
+    	self.status = QLabel('Status', self)
+    	# self.
+    	self.statusBar.addWidget(self.status)
+
 
     def handleButtons(self):
         self.pushButton.clicked.connect(self.search)
@@ -461,23 +468,37 @@ class MainApp(QMainWindow, MAIN_CLASS):
                             added.append(i['name'])
                 except:
                     print('No Subtitle Available')
+    def success(self):
+        self.status.setText('Data fetched successfully')
+        # self.status.styleSheet('QLabel{ background-color: green; color: white; };')
+        self.status.setStyleSheet('background-color: green; color: white;')
+
+    def fail(self, msg=''):
+        print(msg)
+        self.status.setText('Data fetching failed: please check your network connection')
+        # self.status.styleSheet('QLabel{ background-color: red; color: white; };')
+        self.status.setStyleSheet('background-color: red; color: white;')
+
 
     @lru_cache(10)
     def getInfo(self, id):
         try:
             resp = requests.get(CinemanaAPI.ALL_INFO + id)
         except Exception as e:
-            raise e
+            self.fail(e)
         else:
+            self.success()
             return resp.text
 
     @lru_cache(10)
     def get_poster_data(self, url):
         try:
             data = urlopen(url).read()
-        except:
+        except Exception as e:
+            self.fail(e)
             return False
         else:
+            self.success()
             return data
 
     @lru_cache(10)
@@ -485,8 +506,9 @@ class MainApp(QMainWindow, MAIN_CLASS):
         try:
             resp = requests.get(CinemanaAPI.EPISODES_API + id)
         except Exception as e:
-            raise e
+            self.fail(e)
         else:
+            self.success()
             return resp.text
 
     @lru_cache(10)
@@ -494,8 +516,9 @@ class MainApp(QMainWindow, MAIN_CLASS):
         try:
             resp = requests.get(CinemanaAPI.VIDEOS_API + id)
         except Exception as e:
-            raise e
+            self.fail(e)
         else:
+            self.success()
             return resp.text
         
 
@@ -584,9 +607,10 @@ class MainApp(QMainWindow, MAIN_CLASS):
     def get_thumb_image(self, url):
         try:
             data = urlopen(url).read()
-        except:
-            return False
+        except Exception as e:
+            self.fail(e)
         else:
+            self.success()
             return data
 
     @lru_cache(30)
@@ -594,10 +618,12 @@ class MainApp(QMainWindow, MAIN_CLASS):
         try:
             resp = requests.get(CinemanaAPI.SEARCH_API + param)
         except Exception as e:
-            raise e
+            # raise e
+            self.fail(e)
         else:
-            self.url = resp.url
-            print(resp.url)
+            self.success()
+            # self.url = resp.url
+            # print(resp.url)
             return resp.text
 
 if __name__ == "__main__":
