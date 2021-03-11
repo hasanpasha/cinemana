@@ -177,7 +177,7 @@ class MainApp(QMainWindow, MAIN_CLASS):
                     break
 
                 
-        if self.comboBox_7.currentText() != 'Subtitle':
+        elif self.comboBox_7.currentText() != 'Subtitle':
             for i in self.subtiles:
                 if self.comboBox_7.currentText() == i['name']:
                     subtitle = i['file'].replace("\\", '')
@@ -193,13 +193,19 @@ class MainApp(QMainWindow, MAIN_CLASS):
 
             print(playLineArgs)
 
-            # Playing Video With Externel player        
-            player = subprocess.Popen(playLineArgs)
-            output, error = player.communicate()
+            # Playing Video With Externel player
+            try:
+                player = subprocess.Popen(playLineArgs)
+                output, error = player.communicate()
+
+            except Exception as e:
+            	print(f"[ERROR]: {e}")
+            else:
+            	player.wait()
             
-            player.wait()
-            print(output)
-            print(error)
+            finally:
+                print(output)
+                print(error)
             
         self.unsetCursor()
                 
